@@ -8,6 +8,7 @@ use Acme\ApiClient;
 use Acme\ApiException;
 use Acme\CommentFactory;
 use BlastCloud\Guzzler\UsesGuzzler;
+use Closure;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\RequestOptions;
 use PHPUnit\Framework\TestCase;
@@ -24,13 +25,15 @@ class ApiClientTest extends TestCase
             ['id' => 1, 'name' => 'name1', 'text' => 'text1'],
             ['id' => 2, 'name' => 'name2', 'text' => 'text2'],
         ];
+        /* @noinspection PhpUnhandledExceptionInspection */
+        $json = json_encode([
+            'status' => true,
+            'data' => $comments,
+        ], JSON_THROW_ON_ERROR);
         $this->guzzler->expects($this->once())
             ->get("/comments")
             ->withoutQuery()
-            ->willRespond(new Response(200, [], json_encode([
-                'status' => true,
-                'data' => $comments,
-            ], JSON_THROW_ON_ERROR)));
+            ->willRespond(new Response(200, [], $json));
 
         $list = $this->sut->list();
         self::assertEquals((new CommentFactory())->fromList($comments), $list);
@@ -39,14 +42,16 @@ class ApiClientTest extends TestCase
     public function testAdd(): void
     {
         $formData = ['name' => 'some name', 'text' => 'some text'];
+        /* @noinspection PhpUnhandledExceptionInspection */
+        $json = json_encode([
+            'status' => true,
+            'data' => null,
+        ], JSON_THROW_ON_ERROR);
         $this->guzzler->expects($this->once())
             ->post("/comment")
             ->withForm($formData)
             ->withoutQuery()
-            ->willRespond(new Response(200, [], json_encode([
-                'status' => true,
-                'data' => null,
-            ], JSON_THROW_ON_ERROR)));
+            ->willRespond(new Response(200, [], $json));
 
         $this->sut->add($formData['name'], $formData['text']);
     }
@@ -56,27 +61,34 @@ class ApiClientTest extends TestCase
         $id = 1;
         $formData = ['name' => 'new name', 'text' => 'new text'];
 
+        /* @noinspection PhpUnhandledExceptionInspection */
+        $json = json_encode([
+            'status' => true,
+            'data' => null,
+        ], JSON_THROW_ON_ERROR);
         $this->guzzler->expects($this->once())
             ->put("/comment/" . $id)
             ->withoutQuery()
             ->withForm($formData)
-            ->willRespond(new Response(200, [], json_encode([
-                'status' => true,
-                'data' => null,
-            ], JSON_THROW_ON_ERROR)));
+            ->willRespond(new Response(200, [], $json));
 
         $this->sut->update($id, $formData['name'], $formData['text']);
     }
 
     /**
      * @dataProvider exceptionsProvider
+     *
+     * @phpstan-param Closure(): void $callable
      */
-    public function testExceptions(callable $callable): void
+    public function testExceptions(Closure $callable): void
     {
         $this->expectException(ApiException::class);
-        \Closure::bind($callable, $this)();
+        Closure::bind($callable, $this)();
     }
 
+    /**
+     * @return iterable<array{0: Closure():void}>
+     */
     public function exceptionsProvider(): iterable
     {
         yield [
@@ -87,28 +99,28 @@ class ApiClientTest extends TestCase
         ];
         yield [
             function (): void {
-                $this->guzzler->queueResponse(new Response(200, [], \json_encode([], JSON_THROW_ON_ERROR)));
+                $this->guzzler->queueResponse(new Response(200, [], json_encode([], JSON_THROW_ON_ERROR)));
                 $this->sut->list();
             },
         ];
         yield [
             function (): void {
                 $this->guzzler->queueResponse(new Response(200, [],
-                    \json_encode(['status' => false, 'data' => []], JSON_THROW_ON_ERROR)));
+                    json_encode(['status' => false, 'data' => []], JSON_THROW_ON_ERROR)));
                 $this->sut->list();
             },
         ];
         yield [
             function (): void {
                 $this->guzzler->queueResponse(new Response(200, [],
-                    \json_encode(['status' => false, 'data' => null], JSON_THROW_ON_ERROR)));
+                    json_encode(['status' => false, 'data' => null], JSON_THROW_ON_ERROR)));
                 $this->sut->add('z', 'z');
             },
         ];
         yield [
             function (): void {
                 $this->guzzler->queueResponse(new Response(200, [],
-                    \json_encode(['status' => false, 'data' => null], JSON_THROW_ON_ERROR)));
+                    json_encode(['status' => false, 'data' => null], JSON_THROW_ON_ERROR)));
                 $this->sut->update(1, 'z', 'z');
             },
         ];

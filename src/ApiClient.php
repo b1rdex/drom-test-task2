@@ -37,7 +37,7 @@ class ApiClient
     {
         $response = $this->httpClient->get('/comments');
         $list = $this->processJsonResponse($response);
-        \assert($list !== null);
+        assert($list !== null);
 
         return $this->commentFactory->fromList($list);
     }
