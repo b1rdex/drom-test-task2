@@ -79,26 +79,39 @@ class ApiClientTest extends TestCase
 
     public function exceptionsProvider(): iterable
     {
-        yield [function (): void {
-            $this->guzzler->queueResponse(new Response(500));
-            $this->sut->list();
-        }];
-        yield [function (): void {
-            $this->guzzler->queueResponse(new Response(200, [], \json_encode([], JSON_THROW_ON_ERROR)));
-            $this->sut->list();
-        }];
-        yield [function (): void {
-            $this->guzzler->queueResponse(new Response(200, [], \json_encode(['status' => false, 'data' => []], JSON_THROW_ON_ERROR)));
-            $this->sut->list();
-        }];
-        yield [function (): void {
-            $this->guzzler->queueResponse(new Response(200, [], \json_encode(['status' => false, 'data' => null], JSON_THROW_ON_ERROR)));
-            $this->sut->add('z', 'z');
-        }];
-        yield [function (): void {
-            $this->guzzler->queueResponse(new Response(200, [], \json_encode(['status' => false, 'data' => null], JSON_THROW_ON_ERROR)));
-            $this->sut->update(1, 'z', 'z');
-        }];
+        yield [
+            function (): void {
+                $this->guzzler->queueResponse(new Response(500));
+                $this->sut->list();
+            },
+        ];
+        yield [
+            function (): void {
+                $this->guzzler->queueResponse(new Response(200, [], \json_encode([], JSON_THROW_ON_ERROR)));
+                $this->sut->list();
+            },
+        ];
+        yield [
+            function (): void {
+                $this->guzzler->queueResponse(new Response(200, [],
+                    \json_encode(['status' => false, 'data' => []], JSON_THROW_ON_ERROR)));
+                $this->sut->list();
+            },
+        ];
+        yield [
+            function (): void {
+                $this->guzzler->queueResponse(new Response(200, [],
+                    \json_encode(['status' => false, 'data' => null], JSON_THROW_ON_ERROR)));
+                $this->sut->add('z', 'z');
+            },
+        ];
+        yield [
+            function (): void {
+                $this->guzzler->queueResponse(new Response(200, [],
+                    \json_encode(['status' => false, 'data' => null], JSON_THROW_ON_ERROR)));
+                $this->sut->update(1, 'z', 'z');
+            },
+        ];
     }
 
     protected function setUp(): void
