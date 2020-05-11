@@ -23,3 +23,36 @@ text - тип string.
 Для запросов - параметры в теле запроса для post, put, для get - query-параметры.
 
 Для ответов - формат json. Есть код ответа от сервера: 200, 50X, 40X и общая структура вида: {'status': bool, 'data': array|null}. Для post/put data подразумеватся null, для get - array (список комментариев).
+
+### Использование
+Пример использования:
+```php
+$apiClient = new \Acme\ApiClient();
+
+// Получить список комментариев:
+try {
+    $list = $apiClient->list();
+    // $list = [Comment, Comment, ...]
+} catch (\Acme\ApiException $exception) {
+    // Ошибка, ответ api в $exception->getResponse()
+}
+
+// Добавить комментарий:
+try {
+    $apiClient->add('название', 'текст');
+} catch (\Acme\ApiException $exception) {
+    // Ошибка, ответ api в $exception->getResponse()
+}
+
+// Отредактировать комментарий:
+try {
+    $apiClient->update(1, 'новое название ', 'новый текст');
+} catch (\Acme\ApiException $exception) {
+    // Ошибка, ответ api в $exception->getResponse()
+}
+```
+
+Для запуска тестов:
+```shell script
+composer test
+```
